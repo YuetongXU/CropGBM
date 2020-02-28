@@ -1,4 +1,4 @@
-Welcome to CropGBM！
+# Welcome to CropGBM！
 
 Crop Genomic Breeding machine (CropGBM) is a multifunctional program that integrates data preprocessing, population structure analysis, SNP selection, phenotype prediction, and data visualization. Has the following advantages:
 
@@ -10,7 +10,7 @@ Crop Genomic Breeding machine (CropGBM) is a multifunctional program that integr
 
 Chinese version documentation: [https://ibreeding-ch.github.io](https://ibreeding-ch.github.io)
 
-Download link:
+Download link: [https://github.com/YuetongXU/CropGBM](https://github.com/YuetongXU/CropGBM)
 
 Cite:
 

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 parser = argparse.ArgumentParser()
-parser.description = 'Genomic Breeding machine(GBM) is a program that integrates pre-processing, ' \
+parser.description = 'Crop Genomic Breeding machine (CropGBM) is a program that integrates pre-processing, ' \
                      'population structure analysis, snp screening, phenotyping prediction, visualization. ' \
                      'The currently accepted geno file format for the program is: ped, hapmap, vcf and ' \
                      'other(custom format).'

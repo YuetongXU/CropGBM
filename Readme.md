@@ -8,12 +8,14 @@ Crop Genomic Breeding machine (CropGBM) is a multifunctional program that integr
 * Support Kmeans and OPTICS two clustering algorithms to analyze the sample population structure.
 * Plot histograms of heterozygosity rate, deletion rate, and frequency of alleles for genotype data.
 
-Chinese version documentation: [https://ibreeding-ch.github.io](https://ibreeding-ch.github.io)
+*English version documentation*: [https://ibreeding.github.io](https://ibreeding.github.io)
 
-Download link: [https://github.com/YuetongXU/CropGBM](https://github.com/YuetongXU/CropGBM)
+*Chinese version documentation*: [https://ibreeding-ch.github.io](https://ibreeding-ch.github.io)
 
-Cite:
+*Download link*: [https://github.com/YuetongXU/CropGBM](https://github.com/YuetongXU/CropGBM)
 
-Contact us: cropgbm@163.com
+*Cite*:
 
-Note: Academic users can download directly, industrial users first contact us.
+*Contact us*: cropgbm@163.com
+
+*Note*: Academic users can download directly, industrial users first contact us.

@@ -130,7 +130,10 @@ def redim_cluster(geno_data, savepath_prefix, user_params):
     else:
         tsne_dim = 2
     if user_params['optics_min_samples']:
-        optics_min_samples = float(user_params['optics_min_samples'])
+        if float(user_params['optics_min_samples']) < 1:
+            optics_min_samples = float(user_params['optics_min_samples'])
+        else:
+            optics_min_samples = int(user_params['optics_min_samples'])
     else:
         optics_min_samples = 0.025
     if user_params['optics_xi']:
@@ -138,10 +141,12 @@ def redim_cluster(geno_data, savepath_prefix, user_params):
     else:
         optics_xi = 0.05
     if user_params['optics_min_cluster_size']:
-        optics_min_cluster_size = float(user_params['optics_min_cluster_size'])
+        if float(user_params['optics_min_cluster_size']) < 1:
+            optics_min_cluster_size = float(user_params['optics_min_cluster_size'])
+        else:
+            optics_min_cluster_size = int(user_params['optics_min_cluster_size'])
     else:
         optics_min_cluster_size = 0.03
-    n_clusters = int(user_params['n_clusters'])
 
     # dimensionality reduction
     if redim_mode == 'pca':
@@ -151,8 +156,13 @@ def redim_cluster(geno_data, savepath_prefix, user_params):
         redim_array = redim_tsne(ws_data, dim=tsne_dim)
     else:
         raise ValueError('The list of optional parameters for redim_mode  is [\'pca\', \'tsne\']')
+    redim_data = pd.DataFrame(redim_array)
+    redim_data.index = geno_data.index.values
+    redim_data.to_csv(savepath_prefix + '.redim', header=False, index=True)
+
     # clustering
     if cluster_mode == 'kmeans':
+        n_clusters = int(user_params['n_clusters'])
         cluster = cluster_kmeans(redim_array, n_clusters)
         label_array = cluster.labels_
     elif cluster_mode == 'optics':
@@ -162,5 +172,5 @@ def redim_cluster(geno_data, savepath_prefix, user_params):
         raise ValueError('The list of optional parameters for reduce dimension  is [\'kmeans\', \'optics\']')
     sampleid_array = geno_data.index.values
     label_data = pd.DataFrame({'sampleid': sampleid_array, 'group': label_array})
-    label_data.to_csv(savepath_prefix + '.cluster', header=True, index=None)
+    label_data.to_csv(savepath_prefix + '.cluster', header=True, index=False)
     return cluster, redim_array

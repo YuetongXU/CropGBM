@@ -102,7 +102,7 @@ pg.add_argument('--ppexsampleid-path', type=str,
                 help="The sampleid file path, based on the sampleid contained in the file, extracts the genetic "
                      "information of the corresponding sample in the genotype file as an output.")
 pp.add_argument('--ppgroupfile-path', type=str, help="The path to the file containing the groupid information.")
-pp.add_argument('--ppgroupfile-sep', type=int, help="The separator of groupfile. default = ','")
+pp.add_argument('--ppgroupfile-sep', type=str, help="The separator of groupfile. default = ','")
 pp.add_argument('--ppgroupfile-header', action="store_true", help="Indicate that the groupfile contains a header")
 pp.add_argument('--ppgroupid-column', type=int,
                 help="This parameter is only called when the number of groupfile columns is greater than 2. "
@@ -139,7 +139,7 @@ s.add_argument('--sgroupfile-header', action="store_true", help="Indicate that t
 s.add_argument('--sgroupid-column', type=int,
                help="This parameter is only called when the number of groupfile columns is greater than 2. "
                     "The column index in which the groupid information is stored in the groupfile. default = 2")
-s.add_argument('--sgroupfile-sep', type=int, help="The separator of groupfile. default = ','")
+s.add_argument('--sgroupfile-sep', type=str, help="The separator of groupfile. default = ','")
 s.add_argument('--redim-mode', type=str, choices=['tsne', 'pca'], help="Dimension reduction method. default = 'pca'")
 s.add_argument('--pca-explained-var', type=float,
                help="This parameter is only called when --redim-mode = pca. "
@@ -153,17 +153,17 @@ s.add_argument('--cluster-mode', type=str, choices=['kmeans', 'optics'], help="C
 s.add_argument('--n-clusters', type=int,
                help="This parameter is only called when --cluster-mode = kmeans. "
                     "The number of clusters to form as well as the number of centroids to generate.")
-s.add_argument('--optics-min-samples', type=int,
+s.add_argument('--optics-min-samples', type=float,
                help="This parameter is only called when --cluster-mode = optics. "
                     "The parameter value is an integer greater than 1 or a decimal between 0-1. "
                     "When the parameter value is an integer, it indicates the minimum number of samples required to "
                     "form the core point; when the parameter value is a decimal, it indicates the ratio of "
                     "the minimum number of samples required to form the core point to the total number of samples. "
                     "default = 0.025")
-s.add_argument('--optics-xi', type=int,
+s.add_argument('--optics-xi', type=float,
                help="This parameter is only called when --cluster-mode = optics. "
                     "The minimum of the reachable distance gradient required for the clustering class. default = 0.05")
-s.add_argument('--optics-min-cluster-size', type=int,
+s.add_argument('--optics-min-cluster-size', type=float,
                help="This parameter is only called when --cluster-mode = optics. "
                     "The parameter value is an integer greater than 1 or a decimal between 0-1. "
                     "When the parameter value is an integer, it indicates the minimum number of samples required for "
@@ -231,7 +231,7 @@ e.add_argument('--num-threads', type=int,
                help="Number of threads for LightGBM. 0 means default number of threads in OpenMP. default = 0")
 e.add_argument('--min-data-in-leaf', type=int,
                help="Minimal number of data in one leaf. Can be used to deal with over-fitting. default = 1")
-e.add_argument('--objective', type=str, help="The objective of LightGBM. default = 'regression_l2'")
+e.add_argument('--objective', type=str, help="The objective of LightGBM. default = 'regression'")
 e.add_argument('--device-type', type=str,
                help="Device for the tree learning, you can use GPU to achieve the faster learning. default = 'cpu'")
 e.add_argument('--max-depth', type=int,

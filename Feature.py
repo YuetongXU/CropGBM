@@ -178,6 +178,8 @@ def exfeature(traingeno_data, trainphe_data, savedir, params_dict, user_params):
     elif objective == 'multiclass':
         tree_info_dict = extree_info(savepath_prefix + '.lgb_model', num_boost_round, objective, num_class)
         exfeature_by_classification(tree_info_dict, num_boost_round, num_class, savepath_prefix + '.feature')
+    else:
+        raise KeyError("The parameter of fileformat is error. Alternate parameters are ['regression', 'multiclass']")
     print('feature extraction is OK')
 
     feature_data = read_csv(savepath_prefix + '.feature', header=0, index_col=0)

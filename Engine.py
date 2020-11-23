@@ -302,7 +302,7 @@ def lgb_iter_feature(bygain_feature_array, trainfile_data, trainphe_data, params
         random_mse_data.boxplot(ax=axes, rot=90, fontsize=6, grid=False)
         plt.xticks(range(1, random_mse_data.shape[1] + 1), range(1, random_mse_data.shape[1] + 1))
         plt.title('Random')
-        plt.xlabel('Snp Numble')
+        plt.xlabel('Snp Number')
         plt.ylabel('MSE')
         plt.tight_layout()
         pdf.savefig()

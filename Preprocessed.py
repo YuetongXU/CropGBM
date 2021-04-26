@@ -50,7 +50,7 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
 
         elif remove_sampleid:
             process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
-                                       ' --remove ' + keep_sampleid + ' --recode compound-genotypes 01 '
+                                       ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
                                                                       '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
@@ -59,17 +59,17 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
                                        + savedir + '_preprocessed.log', shell=True)
     elif exclude_snpid:
         if keep_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + extract_snpid +
+            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --keep ' + keep_sampleid + ' --recode compound-genotypes 01 '
                                                                     '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         elif remove_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + extract_snpid +
-                                       ' --remove ' + keep_sampleid + ' --recode compound-genotypes 01 '
+            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
+                                       ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
                                                                       '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + extract_snpid +
+            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
     else:
@@ -79,7 +79,7 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
                                        + savedir + '_preprocessed.log', shell=True)
         elif remove_sampleid:
             process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --remove ' +
-                                       keep_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
+                                       remove_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
             process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf +

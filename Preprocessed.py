@@ -39,50 +39,50 @@ def recode012(fileprefix):
     geno_file.close()
 
 
-def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir):
+def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir， plink_path):
     if extract_snpid:
         if keep_sampleid:
 
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
                                        ' --keep ' + keep_sampleid + ' --recode compound-genotypes 01 '
                                                                     '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
 
         elif remove_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
                                        ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
                                                                       '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
                                        ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
     elif exclude_snpid:
         if keep_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --keep ' + keep_sampleid + ' --recode compound-genotypes 01 '
                                                                     '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         elif remove_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
                                                                       '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
     else:
         if keep_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --keep ' +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --keep ' +
                                        keep_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         elif remove_sampleid:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf + ' --remove ' +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --remove ' +
                                        remove_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
-            process = subprocess.Popen('plink --bfile ' + fpf + ' --out ' + spf +
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf +
                                        ' --make-bed --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
     process.wait()

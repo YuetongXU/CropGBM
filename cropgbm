@@ -61,6 +61,7 @@ pg.add_argument('--exclude-snpid-path', type=str,
                 help="The snpid file path, a text file with a list of snp IDs (one per line), "
                      "based on the snpid contained in the file, exclude the genetic "
                      "information of the corresponding sample in the genotype file as an output.")
+pg.add_argument('--plink-path', type=str, help="The sampleid file path. default = plink")
 pg.add_argument('--snpmaxmiss', type=float,
                 help="Filter out all snp with missing rates exceeding the value to be removed. default = 0.05")
 pg.add_argument('--samplemaxmiss', type=float,
@@ -279,6 +280,13 @@ if args.preprocessed_geno:
     fpf = user_params['fileprefix']
     fileformat = user_params['fileformat']
     savepath = user_params['output_folder']
+    if user_params['plink_path']:
+        plink_path = user_params['plink_path']
+    else:
+        plink_path = 'plink'
+    plink_result = os.popen('which ' + plink_path).read().strip()
+    if not os.path.exists(plink_result):
+        raise IOError("Can't find plink by --plink-path")
     if user_params['snpmaxmiss']:
         snpmm = float(user_params['snpmaxmiss'])
     else:
@@ -321,7 +329,7 @@ if args.preprocessed_geno:
         else:
             raise KeyError("The parameter of fileformat is error. "
                            "Alternate parameters are ['ped', 'bed', 'vcf', 'bcf']")
-        process = subprocess.Popen('plink ' + pfile + fpf + ' --out ' + spf + ' --make-bed --freqx --missing' +
+        process = subprocess.Popen(plink_path + ' ' + pfile + fpf + ' --out ' + spf + ' --make-bed --freqx --missing' +
                                    ' --geno ' + str(snpmm) + ' --mind ' + str(samplemm) + ' --maf ' + str(maf) + ' >> '
                                    + spf + '_preprocessed.log', shell=True)
         process.wait()
@@ -350,21 +358,21 @@ if args.preprocessed_geno:
 
         # fill the missing snp
         spf2 = spf + '_f'
-        process = subprocess.Popen('plink --bfile ' + spf + ' --out ' + spf2 + ' --make-bed --fill-missing-a2 >> '
+        process = subprocess.Popen(plink_path + ' --bfile ' + spf + ' --out ' + spf2 + ' --make-bed --fill-missing-a2 >> '
                                    + spf + '_preprocessed.log', shell=True)
         process.wait()
         # indep and recode
         spf3 = spf + '_r'
-        process = subprocess.Popen('plink --bfile ' + spf2 + ' --out ' + spf + ' --indep-pairwise 50 10 ' + str(r2) +
+        process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf + ' --indep-pairwise 50 10 ' + str(r2) +
                                    ' >> ' + spf + '_preprocessed.log', shell=True)
         process.wait()
-        process = subprocess.Popen('plink --bfile ' + spf2 + ' --out ' + spf3 + ' --extract ' + spf +
+        process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf3 + ' --extract ' + spf +
                                    '.prune.in --make-bed >> ' + spf + '_preprocessed.log', shell=True)
         process.wait()
 
         # filter
         spf4 = spf + '_filter'
-        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, spf3, spf4, spf)
+        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, spf3, spf4, spf, plink_path)
 
         os.system('cat ' + spf + '.log >> ' + spf + '_plink.log')
         os.system('cat ' + spf2 + '.log >> ' + spf + '_plink.log')
@@ -393,7 +401,7 @@ if args.preprocessed_geno:
         os.remove(spf4 + '.log')
     else:
         spf4 = spf + '_filter'
-        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf4, spf)
+        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf4, spf, plink_path)
         os.system('cat ' + spf4 + '.log >> ' + spf4 + '_plink.log')
         os.remove(spf4 + '.nosex')
         os.remove(spf4 + '.log')

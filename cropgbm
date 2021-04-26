@@ -488,7 +488,7 @@ if args.preprocessed_phe:
             groups_data.columns = ['sampleid', 'group']
             gphe_data = phe_data.merge(groups_data, on='sampleid')
             gphe_data.index = gphe_data['sampleid'].values
-            groupname_list = list(set(gphe_data['group'].values))
+            groupname_list = sorted(list(set(gphe_data['group'].values)))
             if phe_plot:
                 pdf = PdfPages(spf + '_scatter.pdf')
                 plt.figure(figsize=(15, 15))

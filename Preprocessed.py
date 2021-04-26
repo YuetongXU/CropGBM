@@ -42,7 +42,6 @@ def recode012(fileprefix):
 def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir， plink_path):
     if extract_snpid:
         if keep_sampleid:
-
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
                                        ' --keep ' + keep_sampleid + ' --recode compound-genotypes 01 '
                                                                     '--output-missing-genotype 3 >> '
@@ -135,7 +134,7 @@ def recodephe(phe_data, savepath_prefix, user_params):
     if phe_recode == 'word2num':
         phe_word = list(set(phe_array))
         phe_num = np.array(range(len(phe_word)))
-        word2num = pd.DataFrame({'word': phe_word, 'num': phe_num})
+        word2num = pd.DataFrame({'num': phe_num, 'word': phe_word})
         word2num.to_csv(savepath_prefix + '.word2num', header=True, index=None)
         word_num_dict = dict(zip(phe_word, phe_num))
         num_array = [word_num_dict[i] for i in phe_array]

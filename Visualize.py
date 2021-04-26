@@ -93,7 +93,7 @@ def plot_structure(redim_array, savepath_prefix, cluster, index, user_params):
             else:
                 groupfile_array = groupfile_data.iloc[:, 0].values
             groupfile_array = groupfile_array.flatten()
-            truegroup_set = set(groupfile_array)
+            truegroup_set = sorted(list(set(groupfile_array)))
             labelscolor_dict = labcolor_dict(truegroup_set)
 
             for label in truegroup_set:

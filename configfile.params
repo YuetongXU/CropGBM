@@ -12,6 +12,7 @@ fileformat =
 # semi-necessary
 
 # optional
+plink_path = 
 keep_sampleid_path =
 remove_sampleid_path =
 extract_snpid_path =

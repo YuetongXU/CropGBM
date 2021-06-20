@@ -39,7 +39,7 @@ def recode012(fileprefix):
     geno_file.close()
 
 
-def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir， plink_path):
+def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir, plink_path):
     if extract_snpid:
         if keep_sampleid:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +

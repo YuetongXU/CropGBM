@@ -1,26 +1,22 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 import os
-import codecs
-import subprocess
-import Engine
-import Feature
 import argparse
-import Structure
-import Visualize
 import configparser
-import numpy as np
-import pandas as pd
-import Preprocessed as Pp
 from pandas import read_csv
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+from cropgbm import Engine
+from cropgbm import Feature
+from cropgbm import Structure
+from cropgbm import Visualize
+from cropgbm import Parameters as Params
+from cropgbm import Preprocessed_Geno as Pg
+from cropgbm import Preprocessed_Pheno as Pp
+
 
 parser = argparse.ArgumentParser()
 parser.description = 'Crop Genomic Breeding machine (CropGBM) is a program that integrates pre-processing, ' \
                      'population structure analysis, snp screening, phenotyping prediction, visualization. ' \
-                     'The currently accepted geno file format for the program is: ped, hapmap, vcf and ' \
-                     'other(custom format).'
+                     'The currently accepted geno file format for the program is: ped, bed'
 
 parser.add_argument('-c', '--config_path', type=str,
                     help="The path to the config file, which indicates the value of each parameter "
@@ -32,7 +28,7 @@ parser.add_argument('-c', '--config_path', type=str,
 parser.add_argument('-o', '--output-folder', type=str, help="Folder path to store output files. default = './'")
 
 
-# Preprocessed parames: genotype data
+# Preprocessed params: genotype data
 parser.add_argument('-pg', '--preprocessed-geno', type=str, choices=['all', 'filter'],
                     help="Start the Preprocessed Module to process genotype data.")
 pg = parser.add_argument_group('preprocessed_geno',
@@ -40,11 +36,9 @@ pg = parser.add_argument_group('preprocessed_geno',
                                'For different format data, extract genotype data according to sampleid or snp, '
                                'convert the coding mode of genotype data, etc. to provide the required data for '
                                'downstream. The following parameters are only called in the preprocessed_geno module')
-pg.add_argument('--recode', action="store_true",
-                help="Transform the coding mode of genotype into additive mode.")
 pg.add_argument('--fileprefix', type=str, help="The prefix of the genofile.")
-pg.add_argument('--fileformat', type=str, choices=['ped', 'bed', 'vcf', 'bcf'],
-                help="The format of the genofile.")
+pg.add_argument('--fileformat', type=str, choices=['ped', 'bed'],
+                help="The format of the genofile. default = 'bed'")
 pg.add_argument('--keep-sampleid-path', type=str,
                 help="The sampleid file path, a space/tab-delimited text file with family IDs in the first column "
                      "and within-family IDs in the second column, and removes all unlisted samples from the "
@@ -72,7 +66,7 @@ pg.add_argument('--r2-cutoff', type=float,
                 help="Equivalent to the --indep-pairwise parameter in plink. default = 0.8")
 
 
-# Preprocessed parames: phenotype data
+# Preprocessed params: phenotype data
 parser.add_argument('-pp', '--preprocessed-phe', action="store_true",
                     help="Start the Preprocessed Module to process phenotype data.")
 pp = parser.add_argument_group(
@@ -95,28 +89,20 @@ pp.add_argument('--phe-plot', action="store_true",
                 help="Plot the density distribution graph and boxplot for phenotypic data.")
 pp.add_argument('--phefile-path', type=str, help="The path to the phenotype file.")
 pp.add_argument('--phefile-sep', type=str, help="The separator of phefile. default = ','")
-pp.add_argument('--phefile-header', action="store_true", help="Indicate that the phenotype file contains a header")
-pp.add_argument('--phe-column', type=int,
-                help="This parameter is only called when the number of phenotype file columns is greater than 2. "
-                     "The column index in which the phe information is stored in the phefile. default = 2")
+pp.add_argument('--phe-name', type=str, help="Specify the column name of phe to be processed")
 pg.add_argument('--ppexsampleid-path', type=str,
                 help="The sampleid file path, based on the sampleid contained in the file, extracts the genetic "
                      "information of the corresponding sample in the genotype file as an output.")
 pp.add_argument('--ppgroupfile-path', type=str, help="The path to the file containing the groupid information.")
 pp.add_argument('--ppgroupfile-sep', type=str, help="The separator of groupfile. default = ','")
-pp.add_argument('--ppgroupfile-header', action="store_true", help="Indicate that the groupfile contains a header")
-pp.add_argument('--ppgroupid-column', type=int,
-                help="This parameter is only called when the number of groupfile columns is greater than 2. "
-                     "The column index in which the groupid information is stored in the groupfile. default = 2")
+pp.add_argument('--ppgroupid-name', type=str, help="Specify the column name of groupid")
 pp.add_argument('--num2wordfile-path', type=str,
                 help="This parameter is only called when the --phe-recode=num2word. "
                      "The file contains the correspondence between two coding methods of the numerical values "
                      "and category of the phenotype data.")
-pp.add_argument('--norm-mode', type=str, choices=['0-1', 'max-min', 'z-score'],
-                help="The way to normalize phenotypic data. default = 'z-score'")
 
 
-# Structure parames
+# Structure params
 parser.add_argument('-s', '--structure', action="store_true",
                     help="Start the Structure Module to process genotype data.")
 s = parser.add_argument_group(
@@ -136,10 +122,7 @@ s.add_argument('--structure-plot', action="store_true",
                     "the same category of points have the same color")
 s.add_argument('--genofile-path', type=str, help="The path to the genofile.")
 s.add_argument('--sgroupfile-path', type=str, help="The path to the file containing the groupid information.")
-s.add_argument('--sgroupfile-header', action="store_true", help="Indicate that the groupfile contains a header")
-s.add_argument('--sgroupid-column', type=int,
-               help="This parameter is only called when the number of groupfile columns is greater than 2. "
-                    "The column index in which the groupid information is stored in the groupfile. default = 2")
+s.add_argument('--sgroupid-name', type=str, help="Specify the column name of groupid")
 s.add_argument('--sgroupfile-sep', type=str, help="The separator of groupfile. default = ','")
 s.add_argument('--redim-mode', type=str, choices=['tsne', 'pca'], help="Dimension reduction method. default = 'pca'")
 s.add_argument('--pca-explained-var', type=float,
@@ -147,9 +130,6 @@ s.add_argument('--pca-explained-var', type=float,
                     "int > 1 or float 0-1. The amount of variance that needs to be explained. default = 0.95")
 s.add_argument('--window-size', type=int,
                help="This parameter is only called when --redim-mode = tsne. Window size. default = 20")
-s.add_argument('--tsne-dim', type=int,
-               help="This parameter is only called when --redim-mode = tsne. "
-                    "Dimension of the embedded space. default = 2")
 s.add_argument('--cluster-mode', type=str, choices=['kmeans', 'optics'], help="Cluster method. default = 'kmeans'")
 s.add_argument('--n-clusters', type=int,
                help="This parameter is only called when --cluster-mode = kmeans. "
@@ -172,7 +152,7 @@ s.add_argument('--optics-min-cluster-size', type=float,
                     "the minimum number of samples required for the aggregation class to the total number of samples. "
                     "default = 0.03")
 
-# Engine parames
+# Engine params
 parser.add_argument('-e', '--engine', action="store_true", help='Start the Engine Module to process genotype data.')
 e = parser.add_argument_group(
     'engine', 'The engine module is used to train the inputdata set using the lightGBM model, predict '
@@ -216,14 +196,14 @@ e.add_argument('--cv-nfold', type=int,
                help="Number of folds in cross-validation. This parameter is only used when -cv. default = 5")
 e.add_argument('--min-detal', type=float,
                help="Minimum percentage value of model accuracy improvement per iteration. "
-                    "This parameter is only used when -cv. default = 0.5")
-e.add_argument('--gain-min', type=float,
+                    "This parameter is only used when -cv. default = 0.05")
+e.add_argument('--min-gain', type=float,
                help="Minimum percentage of gain. The program calculates the total gain of each snp in the model, "
                     "taking the product of the maximum gain and Gainmin as the threshold. This snp will not be "
                     "selected when the total gain of snp in the model is less than the threshold."
                     "This parameter is only used when -sf. default = 0.05")
-e.add_argument('--colorbar-max', type=float,
-               help="The product of the maximum gain value of each snp in each tree and --colorbar-max "
+e.add_argument('--max-colorbar', type=float,
+               help="The product of the maximum gain value of each snp in each tree and --max-colorbar "
                     "will be the maximum value of the colorbar in the heatmap. "
                     "This parameter is only used when -sf. default = 0.6")
 e.add_argument('--learning-rate', type=float, help="Learning rates for LightGBM. default = 0.1")
@@ -232,7 +212,8 @@ e.add_argument('--num-threads', type=int,
                help="Number of threads for LightGBM. 0 means default number of threads in OpenMP. default = 0")
 e.add_argument('--min-data-in-leaf', type=int,
                help="Minimal number of data in one leaf. Can be used to deal with over-fitting. default = 1")
-e.add_argument('--objective', type=str, help="The objective of LightGBM. default = 'regression'")
+e.add_argument('--objective', type=str, choices=['regression', 'multiclass'],
+               help="The objective of LightGBM. default = 'regression'")
 e.add_argument('--device-type', type=str,
                help="Device for the tree learning, you can use GPU to achieve the faster learning. default = 'cpu'")
 e.add_argument('--max-depth', type=int,
@@ -263,335 +244,179 @@ e.add_argument('--modelfile-path', type=str,
                help="The path of LightGBM model file for feature selection and prediction. Used in the predict.")
 
 
-args = parser.parse_args()
-user_params = vars(args)
-config = configparser.ConfigParser()
-config.read(args.config_path, encoding="utf-8")
+def main():
+    args = parser.parse_args()
+    user_params = vars(args)
 
+    if args.config_path:
+        config = configparser.ConfigParser()
+        config.read(args.config_path, encoding="utf-8")
+    else:
+        config = None
 
-if args.preprocessed_geno:
-    for param in config['preprocessed_geno']:
-        if not user_params[param]:
-            param_value = config['preprocessed_geno'][param]
-            if not (param_value == '' or param_value == 'None' or param_value == 'false' or param_value == 'False'):
-                user_params[param] = config['preprocessed_geno'][param]
+    user_params = Params.import_config_params(config, user_params)
+    user_params = Params.fill_params_by_default(user_params)
 
-    recode = user_params['recode']
-    fpf = user_params['fileprefix']
-    fileformat = user_params['fileformat']
-    savepath = user_params['output_folder']
-    if user_params['plink_path']:
-        plink_path = user_params['plink_path']
-    else:
-        plink_path = 'plink'
-    plink_result = os.popen('which ' + plink_path).read().strip()
-    if not os.path.exists(plink_result):
-        raise IOError("Can't find plink by --plink-path")
-    if user_params['snpmaxmiss']:
-        snpmm = float(user_params['snpmaxmiss'])
-    else:
-        snpmm = 0.05
-    if user_params['samplemaxmiss']:
-        samplemm = float(user_params['samplemaxmiss'])
-    else:
-        samplemm = 0.05
-    if user_params['maf_max']:
-        maf = float(user_params['maf_max'])
-    else:
-        maf = 0.01
-    if user_params['r2_cutoff']:
-        r2 = float(user_params['r2_cutoff'])
-    else:
-        r2 = 0.8
-    extract_snpid = user_params['extract_snpid_path']
-    exclude_snpid = user_params['exclude_snpid_path']
-    keep_sampleid = user_params['keep_sampleid_path']
-    remove_sampleid = user_params['remove_sampleid_path']
+    if args.preprocessed_geno:
+        # Preparation parameters
+        fpf = Params.check_params(user_params, 'fileprefix')
 
-    try:
-        os.mkdir(savepath + 'preprocessed')
-    except FileExistsError:
-        pass
-    savedir = savepath + 'preprocessed/'
-    filename = fpf.split('/')[-1]
-    spf = savedir + filename
+        savepath = user_params['output_folder']
 
-    if args.preprocessed_geno == 'all':
-        # calculate and filter
-        if fileformat == 'ped':
-            pfile = '--file '
-        elif fileformat == 'bed':
-            pfile = '--bfile '
-        elif fileformat == 'vcf':
-            pfile = '--vcf '
-        elif fileformat == 'bcf':
-            pfile = '--bcf '
+        try:
+            os.mkdir(savepath + 'preprocessed')
+        except FileExistsError:
+            pass
+        savedir = savepath + 'preprocessed/'
+        filename = fpf.split('/')[-1]
+        spf = savedir + filename
+
+        if args.preprocessed_geno == 'all':
+
+            # analyze
+            spf2, spf3 = Pg.analyze_genotype(user_params, fpf, spf)
+
+            # filter
+            spf4 = spf + '_filter'
+            Pg.exid(user_params, spf3, spf4, spf)
+
+            # INFO summery
+            log_list = [x + '.log' for x in [spf, spf2, spf3, spf4]]
+            os.system('cat ' + ' '.join(log_list) + ' > ' + spf + '_plink.log')
+
+            try:
+                for pf in [spf, spf2, spf3, spf4]:
+                    if pf != spf4:
+                        for sf in ['.bed', '.bim', '.fam', '.nosex', '.log']:
+                            os.remove(pf + sf)
+                    else:
+                        for sf in ['.nosex', '.log']:
+                            os.remove(pf + sf)
+            except FileNotFoundError:
+                raise FileNotFoundError('plink call failed, please check the log file for the reason ')
+
+        elif args.preprocessed_geno == 'filter':
+            spf4 = spf + '_filter'
+            Pg.exid(user_params, fpf, spf4, spf)
+            os.system('cat ' + spf4 + '.log > ' + spf4 + '_plink.log')
+
+            try:
+                os.remove(spf4 + '.nosex')
+                os.remove(spf4 + '.log')
+            except FileNotFoundError:
+                raise FileNotFoundError('plink call failed, please check the log file for the reason ')
+
         else:
-            raise KeyError("The parameter of fileformat is error. "
-                           "Alternate parameters are ['ped', 'bed', 'vcf', 'bcf']")
-        process = subprocess.Popen(plink_path + ' ' + pfile + fpf + ' --out ' + spf + ' --make-bed --freqx --missing' +
-                                   ' --geno ' + str(snpmm) + ' --mind ' + str(samplemm) + ' --maf ' + str(maf) + ' >> '
-                                   + spf + '_preprocessed.log', shell=True)
-        process.wait()
+            raise ValueError("The optional value of the 'preprocessed_geno' should be one of ['all', 'filter']")
 
-        freqx_data = read_csv(spf + '.frqx', sep='\t')
-        sample_num = read_csv(spf + '.fam', sep=' ').shape[0]
-        maf_data = pd.DataFrame({'maf': (freqx_data['C(HOM A1)'] * 2 + freqx_data['C(HET)']) / (sample_num * 2)})
-        het_rate_data = pd.DataFrame(freqx_data['C(HET)'] / sample_num)
-        Visualize.plot_hist(maf_data, spf + '_maf.pdf', title='MAF')
-        Visualize.plot_hist(het_rate_data, spf + '_het.pdf', title='Het Rate')
+        Pg.recode012(spf + '_filter')
 
-        with open(spf + '.imiss') as imiss_file:
-            header = imiss_file.readline()
-            imiss_rate = []
-            for i, row in enumerate(imiss_file):
-                imiss_rate.append(float(row.strip()[-1]))
-        imiss_data = pd.DataFrame(imiss_rate)
-        with open(spf + '.lmiss') as lmiss_file:
-            header = lmiss_file.readline()
-            lmiss_rate = []
-            for i, row in enumerate(lmiss_file):
-                lmiss_rate.append(float(row.strip()[-1]))
-        lmiss_data = pd.DataFrame(lmiss_rate)
-        Visualize.plot_hist(imiss_data, spf + '_imiss.pdf', title='Sample Missing Rate')
-        Visualize.plot_hist(lmiss_data, spf + '_lmiss.pdf', title='Snp Missing Rate')
+    if args.preprocessed_phe:
 
-        # fill the missing snp
-        spf2 = spf + '_f'
-        process = subprocess.Popen(plink_path + ' --bfile ' + spf + ' --out ' + spf2 + ' --make-bed --fill-missing-a2 >> '
-                                   + spf + '_preprocessed.log', shell=True)
-        process.wait()
-        # indep and recode
-        spf3 = spf + '_r'
-        process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf + ' --indep-pairwise 50 10 ' + str(r2) +
-                                   ' >> ' + spf + '_preprocessed.log', shell=True)
-        process.wait()
-        process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf3 + ' --extract ' + spf +
-                                   '.prune.in --make-bed >> ' + spf + '_preprocessed.log', shell=True)
-        process.wait()
+        # Preparation parameters
+        phefile_path = Params.check_params(user_params, 'phefile_path')
+        phe_name = Params.check_params(user_params, 'phe_name')
 
-        # filter
-        spf4 = spf + '_filter'
-        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, spf3, spf4, spf, plink_path)
-
-        os.system('cat ' + spf + '.log >> ' + spf + '_plink.log')
-        os.system('cat ' + spf2 + '.log >> ' + spf + '_plink.log')
-        os.system('cat ' + spf3 + '.log >> ' + spf + '_plink.log')
-        os.system('cat ' + spf4 + '.log >> ' + spf + '_plink.log')
-
-        os.remove(spf + '.bed')
-        os.remove(spf + '.bim')
-        os.remove(spf + '.fam')
-        os.remove(spf + '.nosex')
-        os.remove(spf + '.log')
-
-        os.remove(spf2 + '.bed')
-        os.remove(spf2 + '.bim')
-        os.remove(spf2 + '.fam')
-        os.remove(spf2 + '.nosex')
-        os.remove(spf2 + '.log')
-
-        os.remove(spf3 + '.bed')
-        os.remove(spf3 + '.bim')
-        os.remove(spf3 + '.fam')
-        os.remove(spf3 + '.nosex')
-        os.remove(spf3 + '.log')
-
-        os.remove(spf4 + '.nosex')
-        os.remove(spf4 + '.log')
-    else:
-        spf4 = spf + '_filter'
-        Pp.exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf4, spf, plink_path)
-        os.system('cat ' + spf4 + '.log >> ' + spf4 + '_plink.log')
-        os.remove(spf4 + '.nosex')
-        os.remove(spf4 + '.log')
-
-    if recode:
-        Pp.recode012(spf + '_filter')
-
-
-if args.preprocessed_phe:
-    for param in config['preprocessed_phe']:
-        if not user_params[param]:
-            param_value = config['preprocessed_phe'][param]
-            if not (param_value == '' or param_value == 'None' or param_value == 'false' or param_value == 'False'):
-                user_params[param] = config['preprocessed_phe'][param]
-
-    phe_norm = user_params['phe_norm']
-    phe_recode = user_params['phe_recode']
-    phe_plot = user_params['phe_plot']
-    phefile_path = user_params['phefile_path']
-    if user_params['phefile_sep']:
-        phefile_sep = user_params['phefile_sep'].strip('\'')
-        phefile_sep = codecs.decode(phefile_sep, 'unicode_escape')
-    else:
-        phefile_sep = ','
-    if user_params['phe_column']:
-        phe_column = int(user_params['phe_column']) - 2
-    else:
-        phe_column = 0
-    savepath = user_params['output_folder']
-    try:
-        os.mkdir(savepath + 'preprocessed')
-    except FileExistsError:
-        pass
-    savedir = savepath + 'preprocessed/'
-    filename = phefile_path.strip().split('/')[-1].split('.')[:-1]
-    filename = '.'.join(filename)
-    spf = savedir + filename
-
-    if user_params['phefile_header']:
-        phe_data = read_csv(phefile_path, header=0, index_col=0, sep=phefile_sep)
-    else:
-        phe_data = read_csv(phefile_path, header=None, index_col=0, sep=phefile_sep)
-    if phe_data.shape[1] >= 2:
-        phe_data = phe_data.iloc[:, phe_column].dropna(axis=0)
-    else:
-        phe_data = phe_data.iloc[:, 0].dropna(axis=0)
-    id_array = phe_data.index.values
-
-    # extract phe by sampleid
-    exsampleid_path = user_params['ppexsampleid_path']
-    if exsampleid_path:
-        exsampleid_array = read_csv(exsampleid_path, header=None, index_col=None).iloc[:, 0].values
-        ar1ar2, ar1_index, ar2_index = np.intersect1d(ar1=id_array, ar2=exsampleid_array, return_indices=True)
-        phe_data = pd.DataFrame({'sampleid': id_array[ar1_index], 'phe': phe_data.values[ar1_index]})
-        phe_data.index = id_array[ar1_index]
-    else:
-        phe_data = pd.DataFrame({'sampleid': id_array, 'phe': phe_data.values})
-        phe_data.index = id_array
-
-    # recode phenotype
-    if phe_recode:
-        Pp.recodephe(phe_data['phe'], spf, user_params)
-    else:
-        # extract phe by groupid
+        phe_norm = user_params['phe_norm']
+        phe_plot = user_params['phe_plot']
+        phe_recode = user_params['phe_recode']
         groupfile_path = user_params['ppgroupfile_path']
-        if groupfile_path:
-            if user_params['ppgroupfile_sep']:
-                groupfile_sep = user_params['ppgroupfile_sep'].strip('\'')
-                groupfile_sep = codecs.decode(groupfile_sep, 'unicode_escape')
-            else:
-                groupfile_sep = ','
-            if user_params['ppgroupid_column']:
-                groupid_column = int(user_params['ppgroupid_column']) - 1
-            else:
-                groupid_column = 1
-            if user_params['ppgroupfile_header']:
-                groupfile_data = read_csv(groupfile_path, header=0, index_col=None, sep=groupfile_sep)
-            else:
-                groupfile_data = read_csv(groupfile_path, header=None, index_col=None, sep=groupfile_sep)
-            if groupfile_data.shape[1] >= 3:
-                groups_data = groupfile_data.iloc[:, [0, groupid_column]]
-            else:
-                groups_data = groupfile_data.iloc[:, [0, 1]]
-            groups_data.columns = ['sampleid', 'group']
-            gphe_data = phe_data.merge(groups_data, on='sampleid')
-            gphe_data.index = gphe_data['sampleid'].values
-            groupname_list = sorted(list(set(gphe_data['group'].values)))
-            if phe_plot:
-                pdf = PdfPages(spf + '_scatter.pdf')
-                plt.figure(figsize=(15, 15))
-                for index, group_name in enumerate(groupname_list):
-                    group_data = gphe_data[gphe_data['group'] == group_name].loc[:, ['sampleid', 'phe']]
-                    noise = np.random.uniform(-0.05, 0.05, group_data.shape[0])
-                    if phe_norm:
-                        normphe_data = Pp.normphe(group_data['phe'], spf + '_group' + str(group_name), user_params)
-                        plt.scatter(x=noise + index, y=normphe_data['phe_norm'].values)
-                        plt.boxplot(normphe_data['phe_norm'].values, positions=[index], widths=0.5,
-                                    medianprops={'color': 'black'})
-                    else:
-                        plt.scatter(x=noise + index, y=group_data['phe'].values)
-                        plt.boxplot(group_data['phe'].values, positions=[index], widths=0.5,
-                                    medianprops={'color': 'black'})
-                        group_data.to_csv(spf + '_group' + str(group_name) + '.phe', header=True, index=None)
-                plt.xticks(np.array(range(0, len(groupname_list))), groupname_list, rotation=90)
-                plt.tick_params(labelsize=18)
-                plt.tight_layout()
-                pdf.savefig()
-                plt.close()
-                pdf.close()
-            else:
-                for group_name in groupname_list:
-                    group_data = gphe_data[gphe_data['group'] == group_name].loc[:, ['sampleid', 'phe']]
-                    if phe_norm:
-                        normphe_data = Pp.normphe(group_data['phe'], spf + '_group' + str(group_name), user_params)
-                    else:
-                        group_data.to_csv(spf + '_group' + str(group_name) + '.phe', header=True, index=None)
+        phefile_sep = user_params['phefile_sep']
+        savepath = user_params['output_folder']
+
+        try:
+            os.mkdir(savepath + 'preprocessed')
+        except FileExistsError:
+            pass
+        savedir = savepath + 'preprocessed/'
+        filename = phefile_path.strip().split('/')[-1].split('.')[:-1]
+        filename = '.'.join(filename)
+        spf = savedir + filename
+
+        phe_data = read_csv(phefile_path, header=0, index_col=0, sep=phefile_sep)
+        phe_data = phe_data.loc[:, phe_name].dropna(axis=0)
+
+        # extract phe by sampleid
+        phe_data = Pp.ex_sample(phe_data, user_params)
+
+        # recode phenotype
+        if phe_recode:
+            Pp.recodephe(phe_data['phe'], spf, user_params)
+
         else:
-            if phe_plot:
-                pdf = PdfPages(spf + '_plotdd.pdf')
-                plt.figure(figsize=(15, 15))
-                if phe_norm:
-                    normphe_data = Pp.normphe(phe_data['phe'], spf, user_params)
-                    normphe_data['phe_norm'].plot(kind='hist', bins=30)
+            # extract phe by groupid
+            if groupfile_path:
+                gphe_data, groupname_list = Pp.ex_gruopid(phe_data, groupfile_path, user_params)
+
+                if phe_plot:
+                    Pp.plot_phenodist_scatter(gphe_data, groupname_list, spf, user_params)
+
                 else:
-                    phe_data['phe'].plot(kind='hist', bins=30)
-                    phe_data.to_csv(spf + '.phe', header=True, index=None)
-                plt.tick_params(labelsize=20)
-                plt.ylabel('')
-                plt.tight_layout()
-                pdf.savefig()
-                plt.close()
-                pdf.close()
+                    for group_name in groupname_list:
+                        group_data = gphe_data[gphe_data['group'] == group_name].loc[:, ['sampleid', 'phe']]
+                        if phe_norm:
+                            Pp.normphe(group_data['phe'], spf + '_group' + str(group_name))
+                        else:
+                            group_data.to_csv(spf + '_group' + str(group_name) + '.phe', header=True, index=None)
+
             else:
                 if phe_norm:
-                    normphe_data = Pp.normphe(phe_data['phe'], spf, user_params)
+                    phe_data = Pp.normphe(phe_data['phe'], spf)
                 else:
-                    phe_data.to_csv(spf + '.phe', header=True, index=None)
+                    phe_data.to_csv(spf + '.phe', header=True, index=False)
+
+                if phe_plot:
+                    Pp.plot_phenodist_hist(phe_data, spf, user_params)
+
+    if args.structure:
+        filepath = Params.check_params(user_params, 'genofile_path')
+
+        structure_plot = user_params['structure_plot']
+        output_folder = user_params['output_folder']
+
+        try:
+            os.mkdir(output_folder + 'structure')
+        except FileExistsError:
+            pass
+        savedir = output_folder + 'structure/'
+        filename = filepath.strip().split('/')[-1].split('.')[:-1]
+        filename = '.'.join(filename)
+        spf = savedir + filename
+
+        filedata = read_csv(filepath, header=0, index_col=0)
+        cluster, redim_array = Structure.redim_cluster(filedata, spf, user_params)
+        filedata_index = filedata.index.values
+        if structure_plot:
+            Visualize.plot_structure(redim_array, spf, cluster, filedata_index, user_params)
+
+    if args.engine:
+
+        cv = user_params['cv']
+        train = user_params['train']
+        predict = user_params['predict']
+        select_feature = user_params['select_feature']
+        output_folder = user_params['output_folder']
+
+        lgb_params_dict = Engine.get_params(user_params)
+
+        try:
+            os.mkdir(output_folder + 'engine')
+        except FileExistsError:
+            pass
+        savedir = output_folder + 'engine/'
+
+        if train:
+            traingeno_data, trainphe_data = Engine.lgb_train(lgb_params_dict, savedir, user_params)
+            if select_feature:
+                Feature.exfeature(traingeno_data, trainphe_data, savedir, lgb_params_dict, user_params)
+
+        if cv:
+            Engine.lgb_cv(lgb_params_dict, user_params)
+
+        if predict:
+            Engine.lgb_predict(user_params, savedir)
 
 
-if args.structure:
-    for param in config['structure']:
-        if not user_params[param]:
-            param_value = config['structure'][param]
-            if not (param_value == '' or param_value == 'None' or param_value == 'false' or param_value == 'False'):
-                user_params[param] = config['structure'][param]
+if __name__ == '__main__':
+    main()
 
-    structure_plot = user_params['structure_plot']
-    filepath = user_params['genofile_path']
-    output_folder = user_params['output_folder']
-
-    try:
-        os.mkdir(output_folder + 'structure')
-    except FileExistsError:
-        pass
-    savedir = output_folder + 'structure/'
-    filename = filepath.strip().split('/')[-1].split('.')[:-1]
-    filename = '.'.join(filename)
-    spf = savedir + filename
-    filedata = read_csv(filepath, header=0, index_col=0)
-    cluster, redim_array = Structure.redim_cluster(filedata, spf, user_params)
-    filedata_index = filedata.index.values
-    if structure_plot:
-        Visualize.plot_structure(redim_array, spf, cluster, filedata_index, user_params)
-
-
-if args.engine:
-    for param in config['engine']:
-        if not user_params[param]:
-            param_value = config['engine'][param]
-            if not (param_value == '' or param_value == 'None' or param_value == 'false' or param_value == 'False'):
-                user_params[param] = config['engine'][param]
-
-    cv = user_params['cv']
-    train = user_params['train']
-    predict = user_params['predict']
-    select_feature = user_params['select_feature']
-    lgb_params_dict = Engine.get_params(user_params)
-    output_folder = user_params['output_folder']
-    try:
-        os.mkdir(output_folder + 'engine')
-    except FileExistsError:
-        pass
-    savedir = output_folder + 'engine/'
-    if train:
-        traingeno_data, trainphe_data = Engine.lgb_train(lgb_params_dict, savedir, user_params)
-        if select_feature:
-            Feature.exfeature(traingeno_data, trainphe_data, savedir, lgb_params_dict, user_params)
-
-    if cv:
-        cv_result = Engine.lgb_cv(lgb_params_dict, user_params)
-
-    if predict:
-        Engine.lgb_predict(user_params, savedir)

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import Engine
-import Visualize
 import pandas as pd
 from pandas import read_csv
+from cropgbm import Engine
+from cropgbm import Visualize
+from cropgbm import Parameters as Params
 
 
 def extree_info(model_path, num_boost_round, objective, num_class):
@@ -136,6 +137,7 @@ def exfeature(traingeno_data, trainphe_data, savedir, params_dict, user_params):
             The genotype data for the training set sample.
         trainphe_data: pandas Dataframe,
             The phenotype data for the training set sample.
+        savedir: str,
         params_dict: dict,
             Parameters for Booster.
         user_params: dict,
@@ -143,35 +145,22 @@ def exfeature(traingeno_data, trainphe_data, savedir, params_dict, user_params):
 
     Return: None
     """
-    traingeno = user_params['traingeno']
+
+    traingeno = Params.check_params(user_params, 'traingeno')
+
     bygain_boxplot = user_params['bygain_boxplot']
-    if user_params['cv_times']:
-        cv_times = int(user_params['cv_times'])
-    else:
-        cv_times = 5
-    if user_params['num_boost_round']:
-        num_boost_round = int(user_params['num_boost_round'])
-    else:
-        num_boost_round = 100
-    if user_params['objective']:
-        objective = user_params['objective']
-    else:
-        objective = 'regression'
-    if user_params['num_class']:
-        num_class = int(user_params['num_class'])
-    else:
-        num_class = 1
-    if user_params['gain_min']:
-        gainmin = float(user_params['gain_min'])
-    else:
-        gainmin = 0.05
-    if user_params['colorbar_max']:
-        colorbar_max = float(user_params['colorbar_max'])
-    else:
-        colorbar_max = 0.6
+
+    cv_times = user_params['cv_times']
+    num_boost_round = user_params['num_boost_round']
+    objective = user_params['objective']
+    num_class = user_params['num_class']
+    gainmin = user_params['min_gain']
+    colorbar_max = user_params['max_colorbar']
+
     trainfile_name = traingeno.strip().split('/')[-1].split('.')[:-1]
     trainfile_name = '.'.join(trainfile_name)
     savepath_prefix = savedir + trainfile_name
+
     if objective == 'regression':
         tree_info_dict = extree_info(savepath_prefix + '.lgb_model', num_boost_round, objective, num_class)
         exfeature_by_regression(tree_info_dict, num_boost_round, savepath_prefix + '.feature')
@@ -180,11 +169,13 @@ def exfeature(traingeno_data, trainphe_data, savedir, params_dict, user_params):
         exfeature_by_classification(tree_info_dict, num_boost_round, num_class, savepath_prefix + '.feature')
     else:
         raise KeyError("The parameter of fileformat is error. Alternate parameters are ['regression', 'multiclass']")
+
     print('feature extraction is OK')
 
     feature_data = read_csv(savepath_prefix + '.feature', header=0, index_col=0)
     gainmax = feature_data.iloc[0, 0]
     feature_data = feature_data[feature_data['featureGain_sum'] >= (gainmax * gainmin)]
+
     if bygain_boxplot:
         bygain_feature_array = feature_data.index.values
         Engine.lgb_iter_feature(bygain_feature_array, traingeno_data, trainphe_data, params_dict,

@@ -4,6 +4,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.cluster import OPTICS
 from sklearn.cluster import KMeans
+from cropgbm import Parameters as Param
 
 
 def calc_ws(geno_data, ws=20):
@@ -106,70 +107,39 @@ def redim_cluster(geno_data, savepath_prefix, user_params):
     Return: a instance of OPTICS
         optics
     """
-    if user_params['redim_mode']:
-        redim_mode = user_params['redim_mode']
-    else:
-        redim_mode = 'pca'
-    if user_params['cluster_mode']:
-        cluster_mode = user_params['cluster_mode']
-    else:
-        cluster_mode = 'optics'
-    if user_params['window_size']:
-        window_size = int(user_params['window_size'])
-    else:
-        window_size = 20
-    if user_params['pca_explained_var']:
-        if float(user_params['pca_explained_var']) < 1:
-            pca_explained_var = float(user_params['pca_explained_var'])
-        else:
-            pca_explained_var = int(user_params['pca_explained_var'])
-    else:
-        pca_explained_var = 0.95
-    if user_params['tsne_dim']:
-        tsne_dim = int(user_params['tsne_dim'])
-    else:
-        tsne_dim = 2
-    if user_params['optics_min_samples']:
-        if float(user_params['optics_min_samples']) < 1:
-            optics_min_samples = float(user_params['optics_min_samples'])
-        else:
-            optics_min_samples = int(user_params['optics_min_samples'])
-    else:
-        optics_min_samples = 0.025
-    if user_params['optics_xi']:
-        optics_xi = float(user_params['optics_xi'])
-    else:
-        optics_xi = 0.05
-    if user_params['optics_min_cluster_size']:
-        if float(user_params['optics_min_cluster_size']) < 1:
-            optics_min_cluster_size = float(user_params['optics_min_cluster_size'])
-        else:
-            optics_min_cluster_size = int(user_params['optics_min_cluster_size'])
-    else:
-        optics_min_cluster_size = 0.03
+
+    redim_mode = user_params['redim_mode']
+    cluster_mode = user_params['cluster_mode']
+    window_size = user_params['window_size']
+    pca_explained_var = user_params['pca_explained_var']
+    optics_min_samples = user_params['optics_min_samples']
+    optics_xi = user_params['optics_xi']
+    optics_min_cluster_size = user_params['optics_min_cluster_size']
 
     # dimensionality reduction
     if redim_mode == 'pca':
         redim_array = redim_pca(geno_data, explained_var=pca_explained_var)
     elif redim_mode == 'tsne':
         ws_data = calc_ws(geno_data, ws=window_size)
-        redim_array = redim_tsne(ws_data, dim=tsne_dim)
+        redim_array = redim_tsne(ws_data, dim=2)
     else:
-        raise ValueError('The list of optional parameters for redim_mode  is [\'pca\', \'tsne\']')
+        raise ValueError("The list of optional parameters for redim_mode  is ['pca', 'tsne']")
+
     redim_data = pd.DataFrame(redim_array)
     redim_data.index = geno_data.index.values
     redim_data.to_csv(savepath_prefix + '.redim', header=False, index=True)
 
     # clustering
     if cluster_mode == 'kmeans':
-        n_clusters = int(user_params['n_clusters'])
+        n_clusters = int(Param.check_params(user_params, 'n_clusters'))
         cluster = cluster_kmeans(redim_array, n_clusters)
         label_array = cluster.labels_
     elif cluster_mode == 'optics':
         cluster = cluster_optics(redim_array, optics_min_samples, optics_xi, optics_min_cluster_size)
         label_array = cluster.labels_
     else:
-        raise ValueError('The list of optional parameters for reduce dimension  is [\'kmeans\', \'optics\']')
+        raise ValueError("The list of optional parameters for reduce dimension  is ['kmeans', 'optics']")
+
     sampleid_array = geno_data.index.values
     label_data = pd.DataFrame({'sampleid': sampleid_array, 'group': label_array})
     label_data.to_csv(savepath_prefix + '.cluster', header=True, index=False)

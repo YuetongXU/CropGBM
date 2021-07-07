@@ -2,20 +2,17 @@
 output_folder = ./
 
 [preprocessed_geno]
-# boolean
-recode = true
-
 # necessary
-fileprefix =
-fileformat =
+fileprefix = ./testdata/genofile
+fileformat = ped
 
 # semi-necessary
 
 # optional
 plink_path = 
-keep_sampleid_path =
+keep_sampleid_path = ./testdata/ksampleid_file.txt
 remove_sampleid_path =
-extract_snpid_path =
+extract_snpid_path = ./testdata/ksnpid_file.txt
 exclude_snpid_path =
 snpmaxmiss =
 samplemaxmiss =
@@ -27,30 +24,26 @@ r2_cutoff =
 # boolean
 phe_norm = false
 phe_plot = false
-phefile_header =
-ppgroupfile_header =
 
 # necessary
-phefile_path = 
+phefile_path =
+phe_name =
 
 # semi-necessary
 ppexsampleid_path = 
 ppgroupfile_path = 
-ppgroupid_column = 
-ppgroupfile_sep = 
+ppgroupid_name =
 num2wordfile_path = 
 
 # optional
 phefile_sep =
-phe_column =
-phe_recode =  
-norm_mode =
+phe_recode =
+ppgroupfile_sep =
 
 
 [structure]
 # boolean
 structure_plot = true
-sgroupfile_header =
 
 # necessary
 genofile_path = 
@@ -58,14 +51,13 @@ genofile_path =
 # semi-necessary
 n_clusters = 
 sgroupfile_path = 
-sgroupid_column = 
+sgroupid_name =
 sgroupfile_sep = 
 
 # optional
 redim_mode =
 window_size =
 pca_explained_var =
-tsne_dim =
 cluster_mode =
 optics_min_samples =
 optics_xi =
@@ -93,8 +85,8 @@ init_model_path = None
 min_detal =
 cv_times =
 cv_nfold =
-gain_min =
-colorbar_max =
+min_gain =
+max_colorbar =
 
 # lightgbm
 learning_rate =

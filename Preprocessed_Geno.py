@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
 import subprocess
-import numpy as np
 import pandas as pd
 from pandas import read_csv
-from sklearn import preprocessing
+from cropgbm import Visualize
 
 
 # one-hot code
@@ -39,7 +39,18 @@ def recode012(fileprefix):
     geno_file.close()
 
 
-def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf, savedir, plink_path):
+def exid(user_params, fpf, spf, savedir):
+
+    extract_snpid = user_params['extract_snpid_path']
+    exclude_snpid = user_params['exclude_snpid_path']
+    keep_sampleid = user_params['keep_sampleid_path']
+    remove_sampleid = user_params['remove_sampleid_path']
+
+    plink_path = user_params['plink_path']
+    plink_result = os.popen('which ' + plink_path).read().strip()
+    if not os.path.exists(plink_result):
+        raise IOError("Can't find plink by --plink-path")
+
     if extract_snpid:
         if keep_sampleid:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
@@ -50,7 +61,7 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
         elif remove_sampleid:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
                                        ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
-                                                                      '--output-missing-genotype 3 >> '
+                                                                        '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --extract ' + extract_snpid +
@@ -65,7 +76,7 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
         elif remove_sampleid:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
                                        ' --remove ' + remove_sampleid + ' --recode compound-genotypes 01 '
-                                                                      '--output-missing-genotype 3 >> '
+                                                                        '--output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --exclude ' + exclude_snpid +
@@ -77,78 +88,79 @@ def exid(extract_snpid, exclude_snpid, keep_sampleid, remove_sampleid, fpf, spf,
                                        keep_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         elif remove_sampleid:
-            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --remove ' +
-                                       remove_sampleid + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
+            process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf + ' --remove ' + remove_sampleid
+                                       + ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
         else:
             process = subprocess.Popen(plink_path + ' --bfile ' + fpf + ' --out ' + spf +
-                                       ' --make-bed --recode compound-genotypes 01 --output-missing-genotype 3 >> '
+                                       ' --recode compound-genotypes 01 --output-missing-genotype 3 >> '
                                        + savedir + '_preprocessed.log', shell=True)
     process.wait()
 
 
-def normphe(phe_data, savepath_prefix, user_params):
-    """Normalize and standardize phenotypic data.
+def analyze_genotype(user_params, fpf, spf):
 
-    Parameters:
-        phe_data: pandas Dataframe, phenotype data
-        savepath_prefix: str
-            Indicate the processed phenotype file storage path.
-        user_params: dict
-            params_name as key, params_value as value
+    fileformat = user_params['fileformat']
+    snp_miss = user_params['snpmaxmiss']
+    sample_miss = user_params['samplemaxmiss']
+    maf = user_params['maf_max']
+    r2 = user_params['r2_cutoff']
 
-    Return: array
-        transphe_array
-    """
-    if user_params['norm_mode']:
-        norm_mode = user_params['norm_mode']
-    else:
-        norm_mode = 'z-score'
+    plink_path = user_params['plink_path']
+    plink_result = os.popen('which ' + plink_path).read().strip()
+    if not os.path.exists(plink_result):
+        raise IOError("Can't find plink by --plink-path")
 
-    if norm_mode in ['0-1', 'max-min']:
-        transphe_array = preprocessing.MinMaxScaler().fit_transform(phe_data)
-    elif norm_mode == 'z-score':
-        transphe_array = preprocessing.scale(phe_data)
-    else:
-        raise KeyError("The parameter of norm_mode is error. "
-                       "Alternate parameters are ['0-1', 'max-min', 'z-score']")
-    transphe_data = pd.DataFrame({'sampleid': phe_data.index.values, 'phe_norm': transphe_array.flatten()})
-    transphe_data.to_csv(savepath_prefix + '.phenorm', header=True, index=None)
-    return transphe_data
+    process = subprocess.Popen(plink_path + fileformat + fpf + ' --out ' + spf +
+                               ' --make-bed --freqx --missing --geno ' + str(snp_miss) +
+                               ' --mind ' + str(sample_miss) + ' --maf ' + str(maf) + ' >> '
+                               + spf + '_preprocessed.log', shell=True)
+    process.wait()
+
+    freqx_data = read_csv(spf + '.frqx', sep='\t')
+    sample_num = read_csv(spf + '.fam', sep=' ').shape[0]
+
+    maf_data = pd.DataFrame({'maf': (freqx_data['C(HOM A1)'] * 2 + freqx_data['C(HET)']) / (sample_num * 2)})
+    het_rate_data = pd.DataFrame(freqx_data['C(HET)'] / sample_num)
+
+    Visualize.plot_hist(maf_data, spf + '_maf.pdf', title='MAF')
+    Visualize.plot_hist(het_rate_data, spf + '_het.pdf', title='Het Rate')
+
+    with open(spf + '.imiss') as imiss_file:
+        header = imiss_file.readline()
+        imiss_rate = []
+        for i, row in enumerate(imiss_file):
+            imiss_rate.append(float(row.strip()[-1]))
+    imiss_data = pd.DataFrame(imiss_rate)
+
+    with open(spf + '.lmiss') as lmiss_file:
+        header = lmiss_file.readline()
+        lmiss_rate = []
+        for i, row in enumerate(lmiss_file):
+            lmiss_rate.append(float(row.strip()[-1]))
+    lmiss_data = pd.DataFrame(lmiss_rate)
+
+    Visualize.plot_hist(imiss_data, spf + '_imiss.pdf', title='Sample Missing Rate')
+    Visualize.plot_hist(lmiss_data, spf + '_lmiss.pdf', title='Snp Missing Rate')
+
+    # fill the missing snp
+    spf2 = spf + '_f'
+    process = subprocess.Popen(plink_path + ' --bfile ' + spf + ' --out ' + spf2 +
+                               ' --make-bed --fill-missing-a2 >> '
+                               + spf + '_preprocessed.log', shell=True)
+    process.wait()
+
+    # indep and recode
+    spf3 = spf + '_r'
+    process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf +
+                               ' --indep-pairwise 50 10 ' + str(r2) +
+                               ' >> ' + spf + '_preprocessed.log', shell=True)
+    process.wait()
+
+    process = subprocess.Popen(plink_path + ' --bfile ' + spf2 + ' --out ' + spf3 + ' --extract ' + spf +
+                               '.prune.in --make-bed >> ' + spf + '_preprocessed.log', shell=True)
+    process.wait()
+    return spf2, spf3
 
 
-def recodephe(phe_data, savepath_prefix, user_params):
-    """Recode phenotypic data.
 
-    Parameters:
-        phe_data: pandas Dataframe, phenotype data
-        savepath_prefix: str
-            Indicate the processed phenotype file storage path.
-        user_params: dict
-            params_name as key, params_value as value
-
-    Return: None
-    """
-    phe_recode = user_params['phe_recode']
-    phe_array = phe_data.values
-    if phe_recode == 'word2num':
-        phe_word = list(set(phe_array))
-        phe_num = np.array(range(len(phe_word)))
-        word2num = pd.DataFrame({'num': phe_num, 'word': phe_word})
-        word2num.to_csv(savepath_prefix + '.word2num', header=True, index=None)
-        word_num_dict = dict(zip(phe_word, phe_num))
-        num_array = [word_num_dict[i] for i in phe_array]
-        num_data = pd.DataFrame({'sampleid': phe_data.index.values, 'phe': num_array})
-        num_data.to_csv(savepath_prefix + '.numphe', header=True, index=None)
-    elif phe_recode == 'num2word':
-        num2wordfile_path = user_params['num2wordfile_path']
-        num2wordfile_data = read_csv(num2wordfile_path, header=0, index_col=None)
-        phe_word = num2wordfile_data['word'].values
-        phe_num = num2wordfile_data['num'].values
-        num_word_dict = dict(zip(phe_num, phe_word))
-        word_array = [num_word_dict[i] for i in phe_array]
-        word_data = pd.DataFrame({'sampleid': phe_data.index.values, 'phe': word_array})
-        word_data.to_csv(savepath_prefix + '.wordphe', header=True, index=None)
-    else:
-        raise KeyError("The parameter of phe_recode is error. "
-                       "Alternate parameters are ['word2num', 'num2word']")

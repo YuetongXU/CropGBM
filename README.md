@@ -19,3 +19,8 @@ Crop Genomic Breeding machine (CropGBM) is a multifunctional program that integr
 *Contact us*: cropgbm@163.com
 
 *Note*: Academic users can download directly, industrial users first contact us.
+
+
+## Test
+
+Run the `run_test.py` to check whether cropgbm can run successfully locally.

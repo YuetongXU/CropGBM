@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import codecs
 import seaborn
 import numpy as np
 from pandas import read_csv
 from scipy import optimize
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from cropgbm import Parameters as Param
+
 
 colorlist = ['#B22222', '#F08080', '#FF0000', '#006400', '#3CB371', '#2E8B57', '#00FF7F', '#00FF00', '#7FFF00',
              '#FFFF00', '#EEB422', '#FF6666', '#FF9900', '#996633', '#836FFF', '#4876FF', '#0000FF', '#00008B',
@@ -26,15 +27,19 @@ def labcolor_dict(labels_set):
     Return: dict
         labelscolor_dict
     """
+
     labels_num = len(labels_set)
+
     if labels_num > 30:
         # Put back sampling
         color_index = np.random.randint(0, 30, size=labels_num)
     else:
         # No return sampling
         color_index = np.random.choice(range(0, 30), labels_num, replace=False)
+
     labelscolor_array = colorarray[color_index]
     labelscolor_dict = dict(zip(labels_set, labelscolor_array))
+
     return labelscolor_dict
 
 
@@ -61,62 +66,55 @@ def plot_structure(redim_array, savepath_prefix, cluster, index, user_params):
     """
     print('The program only supports scatter plots for drawing 2D data. '
           'If the data dimension exceeds 2 dimensions, only plot the first 2 dimensions of data is drawn')
-    if user_params['redim_mode']:
-        redim_mode = user_params['redim_mode']
-    else:
-        redim_mode = 'pca'
-    if user_params['cluster_mode']:
-        cluster_mode = user_params['cluster_mode']
-    else:
-        cluster_mode = 'kmeans'
-    with PdfPages(savepath_prefix + '_redim.pdf') as pdf:
-        groupfile_path = user_params['sgroupfile_path']
-        if groupfile_path:
-            plt.figure(figsize=(12, 9))
-            if user_params['sgroupfile_sep']:
-                groupfile_sep = user_params['sgroupfile_sep'].strip('\'')
-                groupfile_sep = codecs.decode(groupfile_sep, 'unicode_escape')
-            else:
-                groupfile_sep = ','
-            if user_params['sgroupid_column']:
-                groupid_column = int(user_params['sgroupid_column']) - 2
-            else:
-                groupid_column = 0
-            if user_params['sgroupfile_header']:
-                groupfile_data = read_csv(groupfile_path, header=0, index_col=0, sep=groupfile_sep)
-            else:
-                groupfile_data = read_csv(groupfile_path, header=None, index_col=0, sep=groupfile_sep)
 
+    redim_mode = user_params['redim_mode']
+    cluster_mode = user_params['cluster_mode']
+
+    with PdfPages(savepath_prefix + '_redim.pdf') as pdf:
+
+        groupfile_path = user_params['sgroupfile_path']
+
+        if groupfile_path:
+
+            groupid_name = Param.check_params(user_params, 'sgroupid_name')
+
+            groupfile_sep = user_params['sgroupfile_sep']
+
+            groupfile_data = read_csv(groupfile_path, header=0, index_col=0, sep=groupfile_sep)
             groupfile_data = groupfile_data.loc[index, :]
-            if groupfile_data.shape[1] >= 2:
-                groupfile_array = groupfile_data.iloc[:, groupid_column].values
-            else:
-                groupfile_array = groupfile_data.iloc[:, 0].values
+            groupfile_array = groupfile_data.loc[:, groupid_name].values
             groupfile_array = groupfile_array.flatten()
             truegroup_set = sorted(list(set(groupfile_array)))
             labelscolor_dict = labcolor_dict(truegroup_set)
 
+            plt.figure(figsize=(12, 9))
             for label in truegroup_set:
                 label_index = np.where(groupfile_array == label)[0]
                 label_array = redim_array[label_index, :]
                 plt.scatter(label_array[:, 0], label_array[:, 1], c=labelscolor_dict[label], label=label)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
+
         else:
             plt.figure(figsize=(9, 9))
             plt.scatter(redim_array[:, 0], redim_array[:, 1])
         plt.title('Dimensionality reduction')
+
         if redim_mode == 'pca':
             plt.xlabel('PC1')
             plt.ylabel('PC2')
+
         elif redim_mode == 'tsne':
             plt.xlabel('X')
             plt.ylabel('Y')
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()
 
     with PdfPages(savepath_prefix + '_cluster.pdf') as pdf:
+
         predictgroup_set = set(cluster.labels_)
+
         # remove samples that are not clustered
         try:
             predictgroup_set.remove(-1)
@@ -124,6 +122,7 @@ def plot_structure(redim_array, savepath_prefix, cluster, index, user_params):
             pass
         labelscolor_dict = labcolor_dict(predictgroup_set)
         plt.figure(figsize=(9, 9))
+
         for ilabel in labelscolor_dict:
             idata = redim_array[cluster.labels_ == ilabel]
             plt.scatter(idata[:, 0], idata[:, 1], c=labelscolor_dict[ilabel])
@@ -131,12 +130,14 @@ def plot_structure(redim_array, savepath_prefix, cluster, index, user_params):
                     c='#CCCCCC', marker='v', alpha=0.6, label='no_cluster')
         plt.title('Cluster')
         plt.legend()
+
         if redim_mode == 'pca':
             plt.xlabel('PC1')
             plt.ylabel('PC2')
         elif redim_mode == 'tsne':
             plt.xlabel('X')
             plt.ylabel('Y')
+
         plt.tight_layout()
         pdf.savefig()
         plt.close()

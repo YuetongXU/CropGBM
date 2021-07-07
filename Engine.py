@@ -5,6 +5,7 @@ import lightgbm as lgb
 from pandas import read_csv
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from cropgbm import Parameters as Params
 
 
 def get_params(user_params):
@@ -18,59 +19,20 @@ def get_params(user_params):
     Return: dict
         lgb_params_dict
     """
-    if user_params['learning_rate']:
-        learning_rate = float(user_params['learning_rate'])
-    else:
-        learning_rate = 0.1
-    if user_params['num_leaves']:
-        num_leaves = int(user_params['num_leaves'])
-    else:
-        num_leaves = 10
-    if user_params['num_threads']:
-        num_threads = int(user_params['num_threads'])
-    else:
-        num_threads = 0
-    if user_params['min_data_in_leaf']:
-        min_data_in_leaf = int(user_params['min_data_in_leaf'])
-    else:
-        min_data_in_leaf = 1
-    if user_params['objective']:
-        objective = user_params['objective']
-    else:
-        objective = 'regression'
-    if user_params['device_type']:
-        device_type = user_params['device_type']
-    else:
-        device_type = 'cpu'
-    if user_params['max_depth']:
-        max_depth = int(user_params['max_depth'])
-    else:
-        max_depth = -1
-    if user_params['feature_fraction']:
-        feature_fraction = float(user_params['feature_fraction'])
-    else:
-        feature_fraction = 1
-    if user_params['verbosity']:
-        verbosity = int(user_params['verbosity'])
-    else:
-        verbosity = 0
-    if user_params['num_class']:
-        num_class = int(user_params['num_class'])
-    else:
-        num_class = 1
 
     lgb_params_dict = {
-        'learning_rate': learning_rate,
-        'num_leaves': num_leaves,
-        'num_threads': num_threads,
-        'min_data_in_leaf': min_data_in_leaf,
-        'objective': objective,
-        'device_type': device_type,
-        'max_depth': max_depth,
-        'feature_fraction': feature_fraction,
-        'verbosity': verbosity,
-        'num_class': num_class,
+        'learning_rate': user_params['learning_rate'],
+        'num_leaves': user_params['num_leaves'],
+        'num_threads': user_params['num_threads'],
+        'min_data_in_leaf': user_params['min_data_in_leaf'],
+        'objective': user_params['objective'],
+        'device_type': user_params['device_type'],
+        'max_depth': user_params['max_depth'],
+        'feature_fraction': user_params['feature_fraction'],
+        'verbosity': user_params['verbosity'],
+        'num_class': user_params['num_class'],
     }
+
     return lgb_params_dict
 
 
@@ -81,23 +43,16 @@ def lgb_train(params_dict, savedir, user_params):
         trainphe_data, train_boost
     """
     # load params
-    traingeno = user_params['traingeno']
-    trainphe = user_params['trainphe']
+    traingeno = Params.check_params(user_params, 'traingeno')
+    trainphe = Params.check_params(user_params, 'trainphe')
+
     validgeno = user_params['validgeno']
-    validphe = user_params['validphe']
-    if user_params['num_boost_round']:
-        num_boost_round = int(user_params['num_boost_round'])
-    else:
-        num_boost_round = 100
-    if user_params['verbose_eval']:
-        verbose_eval = int(user_params['verbose_eval'])
-    else:
-        verbose_eval = 10
-    if user_params['early_stopping_rounds']:
-        early_stopping_rounds = int(user_params['early_stopping_rounds'])
-    else:
-        early_stopping_rounds = 20
     init_model_path = user_params['init_model_path']
+
+    num_boost_round = user_params['num_boost_round']
+    verbose_eval = user_params['verbose_eval']
+    early_stopping_rounds = user_params['early_stopping_rounds']
+
     trainfile_name = traingeno.strip().split('/')[-1].split('.')[:-1]
     trainfile_name = '.'.join(trainfile_name)
     model_savepath = savedir + trainfile_name + '.lgb_model'
@@ -111,11 +66,15 @@ def lgb_train(params_dict, savedir, user_params):
 
     # valid set
     if validgeno:
+        validphe = Params.check_params(user_params, 'validphe')
+
         validgeno_data = read_csv(validgeno, header=0, index_col=0)
         validphe_data = read_csv(validphe, header=0, index_col=0).dropna(axis=0)
+
         validgeno_data = validgeno_data.loc[validphe_data.index.values, :]
         validsnpid = validgeno_data.columns.values
         ar1ar2, ar1_index, ar2_index = np.intersect1d(ar1=validsnpid, ar2=trainsnpid, return_indices=True)
+
         if len(validsnpid[ar1_index]) != len(trainsnpid):
             raise KeyError('Part of the snpid in the validgeno missing traingeno.')
         else:
@@ -124,9 +83,11 @@ def lgb_train(params_dict, savedir, user_params):
             else:
                 print('Warning: The snpid order in the validgeno does not match the snpid of the traingeno.')
                 validgeno_data = validgeno_data.loc[:, trainsnpid]
+
         valid_set = lgb.Dataset(validgeno_data, label=validphe_data)
         train_boost = lgb.train(params_dict, train_set, num_boost_round, valid_set, init_model=init_model_path,
                                 early_stopping_rounds=early_stopping_rounds, verbose_eval=verbose_eval)
+
     else:
         train_boost = lgb.train(params_dict, train_set, num_boost_round, init_model=init_model_path)
 
@@ -146,30 +107,17 @@ def lgb_cv(params_dict, user_params):
         The dictionary has the following format: {‘metric1-mean’: [values], ‘metric1-stdv’: [values],
         ‘metric2-mean’: [values], ‘metric2-stdv’: [values], …}.
     """
-    traingeno = user_params['traingeno']
-    trainphe = user_params['trainphe']
-    if user_params['cv_nfold']:
-        cv_nfold = int(user_params['cv_nfold'])
-    else:
-        cv_nfold = 5
-    if user_params['verbose_eval']:
-        verbose_eval = int(user_params['verbose_eval'])
-    else:
-        verbose_eval = 10
-    if user_params['num_boost_round']:
-        num_boost_round = int(user_params['num_boost_round'])
-    else:
-        num_boost_round = 100
-    if user_params['early_stopping_rounds']:
-        early_stopping_rounds = int(user_params['early_stopping_rounds'])
-    else:
-        early_stopping_rounds = 20
-    if user_params['min_detal']:
-        min_detal = float(user_params['min_detal'])
-    else:
-        min_detal = 0.5
-    objective = params_dict['objective']
+    traingeno = Params.check_params(user_params, 'traingeno')
+    trainphe = Params.check_params(user_params, 'trainphe')
+
+    cv_nfold = user_params['cv_nfold']
+    verbose_eval = user_params['verbose_eval']
+    num_boost_round = user_params['num_boost_round']
+    early_stopping_rounds = user_params['early_stopping_rounds']
+    min_detal = user_params['min_detal']
+    objective = user_params['objective']
     init_model_path = user_params['init_model_path']
+
     traingeno_data = read_csv(traingeno, header=0, index_col=0)
     trainphe_data = read_csv(trainphe, header=0, index_col=0).dropna(axis=0)
     traingeno_data = traingeno_data.loc[trainphe_data.index.values, :]
@@ -195,18 +143,19 @@ def lgb_predict(user_params, savedir):
 
     Return: None
     """
-    if user_params['objective']:
-        objective = user_params['objective']
-    else:
-        objective = 'regression'
+    testgeno = Params.check_params(user_params, 'testgeno')
+
+    objective = user_params['objective']
     modelfile_path = user_params['modelfile_path']
-    testgeno = user_params['testgeno']
+
     testfile_name = testgeno.strip().split('/')[-1].split('.')[:-1]
     testfile_name = '.'.join(testfile_name)
     predict_savepath = savedir + testfile_name + '.predict'
+
     test_data = read_csv(testgeno, header=0, index_col=0)
     train_boost = lgb.Booster(model_file=modelfile_path)
     predict = train_boost.predict(test_data)
+
     if objective == 'regression':
         pass
     elif objective == 'multiclass':
@@ -214,6 +163,7 @@ def lgb_predict(user_params, savedir):
               'and the result can be converted into the original encoding method by using '
               'the --phe-recode parameter of the Preprocessed module.')
         predict = np.argmax(predict, axis=1)
+
     predict = pd.DataFrame({'sampleid': test_data.index.values, 'predict_phe': predict})
     predict.to_csv(predict_savepath, header=True, index=False)
 
@@ -251,6 +201,7 @@ def lgb_iter_feature(bygain_feature_array, trainfile_data, trainphe_data, params
 
     """
     print('lgb_iter_feature_cv_all is in progress. This process will take a long time, please wait patiently')
+
     exfeature_num = bygain_feature_array.shape[0]
     params_dict['verbosity'] = -1
 

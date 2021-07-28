@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Crop Genomic Breeding machine (CropGBM) is a multifunctional linux program that integrates data preprocessing, population structure analysis, SNP selection, phenotype prediction, and data visualization. Has the following advantages:
+Crop Genomic Breeding machine (CropGBM) is a multifunctional Python3 program that integrates data preprocessing, population structure analysis, SNP selection, phenotype prediction, and data visualization. Has the following advantages:
 
 * Use LightGBM algorithm to quickly and accurately predict phenotype values and support GPU-accelerated training.
 * Supports selection and visualization of SNPs that are strongly related to phenotype.

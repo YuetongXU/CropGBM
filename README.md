@@ -1,5 +1,7 @@
 # Welcome to CropGBM！
 
+[![DOI](https://zenodo.org/badge/243508749.svg)](https://zenodo.org/badge/latestdoi/243508749)
+
 ## Introduction
 
 Crop Genomic Breeding machine (CropGBM) is a multifunctional Python3 program that integrates data preprocessing, population structure analysis, SNP selection, phenotype prediction, and data visualization. Has the following advantages:

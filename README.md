@@ -62,7 +62,7 @@ Run the `run_test.py` to check whether cropgbm can run successfully locally.
 
 ## About
 
-**Citation**: Jun Yan, Yuetong Xu, Qian Cheng, Shuqin Jiang, Qian Wang, Yingjie Xiao, Chuang Ma, Jianbing Yan and Xiangfeng Wang. _LightGBM: accelerated genomically-designed crop breeding via ensemble learning._ 
+**Citation**: Jun Yan, Yuetong Xu, Qian Cheng, Shuqin Jiang, Qian Wang, Yingjie Xiao, Chuang Ma, Jianbing Yan and Xiangfeng Wang. _LightGBM: accelerated genomically-designed crop breeding through ensemble learning._ 
 
 **Supplementary Information**: Support data and materials for the manuscript is available at _https://github.com/YuetongXU/Cropgbm-Paper_
 

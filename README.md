@@ -57,6 +57,7 @@ Download source code : [https://github.com/YuetongXU/CropGBM/releases/tag/cropgb
 ## Test (For Conda)
 
 Enter the ‘/miniconda3/pkgs/cropgbm-1.1.2-py39_0/info/test’  folder
+
 Run the `run_test.py` to check whether cropgbm can run successfully locally.
 
 

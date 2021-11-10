@@ -27,7 +27,7 @@ Download source code : [https://github.com/YuetongXU/CropGBM/releases/tag/cropgb
 
 ## Installation
 
-### Install via Conda 
+### Install via Conda (Recommend)
 
     $ conda install -c xu_cau_cab cropgbm 
 
@@ -54,7 +54,7 @@ Download source code : [https://github.com/YuetongXU/CropGBM/releases/tag/cropgb
     $ source ~/.bashrc
 
 
-## Test（For Conda）
+## Test (For Conda)
 
 Enter the ‘/miniconda3/pkgs/cropgbm-1.1.2-py39_0/info/test’  folder
 Run the `run_test.py` to check whether cropgbm can run successfully locally.

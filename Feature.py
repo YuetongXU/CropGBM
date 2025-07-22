@@ -89,7 +89,8 @@ def exfeature_by_classification(tree_info_dict, num_boost_round, num_class, save
                 icat_alltree = icat_ktree_df
 
         icat_alltree.fillna(0, inplace=True)
-        feature_gain_sum = icat_alltree.sum(axis=1)
+        gain_col = icat_alltree.select_dtypes(include='number')
+        feature_gain_sum = gain_col.sum(axis=1)
         icat_alltree.insert(1, 'featureGain_sum', feature_gain_sum)
         icat_alltree = icat_alltree.sort_values(by='featureGain_sum', axis=0, ascending=False)
         icat_alltree.to_csv(save_path + '.cat_' + str(icat), index=None)

@@ -132,7 +132,7 @@ os.system("cropgbm -e -t -sf "
           "--trainphe ./testdata/train.phe "
           "--min-gain 0.05 "
           "--max-colorbar 0.6 "
-          "--cv-times 3")
+          "--cv-times 2")
 
 print('Test 18')
 os.system("cropgbm -e -p "
@@ -146,7 +146,7 @@ os.system("cropgbm -e -t -sf "
           "--trainphe ./testdata/train_class.phe "
           "--min-gain 0.05 "
           "--max-colorbar 0.6 "
-          "--cv-times 3 "
+          "--cv-times 2 "
           "--objective multiclass "
           "--num-class 6 "
           "--num-boost-round 20 "

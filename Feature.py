@@ -123,7 +123,8 @@ def exfeature_by_regression(tree_info_dict, num_boost_round, save_path=None):
             alltree = itree_df
 
     alltree.fillna(0, inplace=True)
-    feature_gain_sum = alltree.sum(axis=1)
+    gain_col = alltree.select_dtypes(include='number')
+    feature_gain_sum = gain_col.sum(axis=1)
     alltree.insert(1, 'featureGain_sum', feature_gain_sum)
     alltree = alltree.sort_values(by='featureGain_sum', axis=0, ascending=False)
     alltree.to_csv(save_path, index=None)

@@ -36,36 +36,20 @@ The following are required before installing cooltools:
 
 ## Installation
 
-### Install via Conda (Recommend)
+### Install via Conda or Mamba (Recommend)
 
     $ conda install -c xu_cau_cab::cropgbm 
+or
+    $ mamba install -c xu_cau_cab::cropgbm 
 
 ### Install via pip
 
     $ pip install --user cropgbm
 
-### Install via source code
-
-    $ tar -zxf CropGBM.tar.gz
-
-    # Install Python package dependencies of CropGBM: setuptools, wheel, numpy, scipy, pandas, scikit-learn, lightgbm, matplotlib, seaborn
-    $ pip install --user setuptools wheel numpy scipy pandas scikit-learn lightgbm matplotlib seaborn
-    
-    # Install external dependencies of CropGBM: PLINK 1.90 
-    $ wget s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20191028.zip
-    $ mkdir plink_1.90
-    $ unzip plink_linux_x86_64_20191028.zip -d ./plink_1.90
-    
-    # Add CropGBM, PLINK to the system environment variables for quick use:
-    $ vi ~/.bashrc
-    export PATH="/userpath/CropGBM:$PATH"
-    export PATH="/userpath/plink1.90:$PATH"
-    $ source ~/.bashrc
-
 
 ## Test (For Conda)
 
-Enter the ‘/miniconda3/pkgs/cropgbm-1.1.2-py39_0/info/test’  folder
+Enter the ‘/miniconda3/pkgs/cropgbm-1.1.7-py311_0/info/cropgbm/test/’  folder
 
 Run the `run_test.py` to check whether cropgbm can run successfully locally.
 

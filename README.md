@@ -25,13 +25,13 @@ The following are required before installing cooltools:
 
 - python >=3.8,<=3.11
 - numpy >=1.26.0,<2.0.0
-    scipy >=1.7.0
-    pandas >=1.3.0
-    scikit-learn >=0.24.2
-    lightgbm >=3.3.0,<4.0.0
-    matplotlib >=3.4.0
-    seaborn >=0.11.0
-    plink >=1.9
+- scipy >=1.7.0
+- pandas >=1.3.0
+- scikit-learn >=0.24.2
+- lightgbm >=3.3.0,<4.0.0
+- matplotlib >=3.4.0
+- seaborn >=0.11.0
+- plink >=1.9
 
 
 ## Installation

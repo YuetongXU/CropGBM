@@ -39,7 +39,9 @@ The following are required before installing cooltools:
 ### Install via Conda or Mamba (Recommend)
 
     $ conda install xu_cau_cab::cropgbm 
+
 or
+
     $ mamba install xu_cau_cab::cropgbm 
 
 ### Install via pip

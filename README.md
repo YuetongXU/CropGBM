@@ -1,6 +1,6 @@
 # Welcome to CropGBM！
 
-[![DOI](https://zenodo.org/badge/243508749.svg)](https://zenodo.org/badge/latestdoi/243508749) [![Anaconda-Server Badge](https://anaconda.org/xu_cau_cab/cropgbm/badges/platforms.svg)](https://anaconda.org/xu_cau_cab/cropgbm) [![Anaconda-Server Badge](https://anaconda.org/xu_cau_cab/cropgbm/badges/conda.svg)](https://conda.anaconda.org/xu_cau_cab/cropgbm)
+[![DOI](https://zenodo.org/badge/243508749.svg)](https://zenodo.org/badge/latestdoi/243508749) [![Anaconda-Server Badge](https://anaconda.org/xu_cau_cab/cropgbm/badges/platforms.svg)](https://anaconda.org/xu_cau_cab/cropgbm) [![Anaconda-Server Badge](https://anaconda.org/xu_cau_cab/cropgbm/badges/version.svg)](https://anaconda.org/xu_cau_cab/cropgbm)
 
 ## Introduction
 

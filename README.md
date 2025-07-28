@@ -23,8 +23,8 @@ Crop Genomic Breeding machine (CropGBM) is a multifunctional Python3 program tha
 ## Requirements
 The following are required before installing cooltools:
 
-    python >=3.8,<=3.11
-    numpy >=1.26.0,<2.0.0
+- python >=3.8,<=3.11
+- numpy >=1.26.0,<2.0.0
     scipy >=1.7.0
     pandas >=1.3.0
     scikit-learn >=0.24.2

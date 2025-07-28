@@ -20,16 +20,25 @@ Crop Genomic Breeding machine (CropGBM) is a multifunctional Python3 program tha
 *Chinese version documentation*: [https://ibreeding-ch.github.io](https://ibreeding-ch.github.io)
 
 
-## Download
+## Requirements
+The following are required before installing cooltools:
 
-Download source code : [https://github.com/YuetongXU/CropGBM/releases/tag/cropgbm-v1.1.2](https://github.com/YuetongXU/CropGBM/releases/tag/cropgbm-v1.1.2)
+    python >=3.8,<=3.11
+    numpy >=1.26.0,<2.0.0
+    scipy >=1.7.0
+    pandas >=1.3.0
+    scikit-learn >=0.24.2
+    lightgbm >=3.3.0,<4.0.0
+    matplotlib >=3.4.0
+    seaborn >=0.11.0
+    plink >=1.9
 
 
 ## Installation
 
 ### Install via Conda (Recommend)
 
-    $ conda install -c xu_cau_cab cropgbm 
+    $ conda install -c xu_cau_cab::cropgbm 
 
 ### Install via pip
 
